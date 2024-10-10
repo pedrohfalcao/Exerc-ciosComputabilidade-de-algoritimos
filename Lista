@@ -1,0 +1,812 @@
+1. AFD que reconhece strings terminadas em "1" sobre o alfabeto {0, 1}
+class AFD:
+    def __init__(self, transitions, start_state, accept_states):
+        self.transitions = transitions 
+        self.start_state = start_state  
+        self.accept_states = accept_states  
+
+    def process_string(self, string):
+        current_state = self.start_state
+        for char in string:
+            if (current_state, char) in self.transitions:
+                current_state = self.transitions[(current_state, char)]
+            else:
+                return False  # Não há transição possível
+        return current_state in self.accept_states
+
+
+# Definindo transições do AFD
+transitions = {
+    ('q0', '0'): 'q0',
+    ('q0', '1'): 'q1',
+    ('q1', '0'): 'q0',
+    ('q1', '1'): 'q1',
+}
+
+afd = AFD(transitions, 'q0', {'q1'})
+
+
+print(afd.process_string("001"))  # True
+print(afd.process_string("000"))  # False
+
+2. AFD que reconhece strings com número par de '0's
+class AFDParZeros:
+    def __init__(self):
+        self.transitions = {
+            ('q0', '0'): 'q1',
+            ('q0', '1'): 'q0',
+            ('q1', '0'): 'q0',
+            ('q1', '1'): 'q1',
+        }
+        self.start_state = 'q0'
+        self.accept_states = {'q0'}  # Aceita se o número de '0's for par
+
+    def process_string(self, string):
+        current_state = self.start_state
+        for char in string:
+            current_state = self.transitions.get((current_state, char), None)
+            if current_state is None:
+                return False
+        return current_state in self.accept_states
+
+
+afd_par_zeros = AFDParZeros()
+
+print(afd_par_zeros.process_string("001100"))  # True
+print(afd_par_zeros.process_string("001"))     # False
+
+3. AFD que reconhece strings com exatamente dois '1's
+class AFDDoisUns:
+    def __init__(self):
+        self.transitions = {
+            ('q0', '0'): 'q0',
+            ('q0', '1'): 'q1',
+            ('q1', '0'): 'q1',
+            ('q1', '1'): 'q2',
+            ('q2', '0'): 'q2',
+            ('q2', '1'): 'q3',  # q3 é um estado de erro
+        }
+        self.start_state = 'q0'
+        self.accept_states = {'q2'}  # Aceita se houver exatamente dois '1's
+
+    def process_string(self, string):
+        current_state = self.start_state
+        for char in string:
+            current_state = self.transitions.get((current_state, char), None)
+            if current_state is None:
+                return False
+        return current_state in self.accept_states
+
+
+afd_dois_uns = AFDDoisUns()
+
+
+print(afd_dois_uns.process_string("00100"))  # True
+print(afd_dois_uns.process_string("00101"))  # False
+
+
+4. AFD que aceita strings com pelo menos um '0'
+class AFDAoMenosUmZero:
+    def __init__(self):
+        self.transitions = {
+            ('q0', '0'): 'q1',
+            ('q0', '1'): 'q0',
+            ('q1', '0'): 'q1',
+            ('q1', '1'): 'q1',
+        }
+        self.start_state = 'q0'
+        self.accept_states = {'q1'}  # Aceita se pelo menos um '0' foi encontrado
+
+    def process_string(self, string):
+        current_state = self.start_state
+        for char in string:
+            current_state = self.transitions.get((current_state, char), None)
+            if current_state is None:
+                return False
+        return current_state in self.accept_states
+
+
+afd_um_zero = AFDAoMenosUmZero()
+
+
+print(afd_um_zero.process_string("001"))  # True
+print(afd_um_zero.process_string("111"))  # False
+
+
+5. AFD em Python que aceita strings binárias que começam e terminam com o mesmo caractere
+
+class AFDInicioFimMesmo:
+    def __init__(self):
+        self.transitions = {
+            ('q0', '0'): 'q0_0',
+            ('q0', '1'): 'q0_1',
+            ('q0_0', '0'): 'q0_0',
+            ('q0_0', '1'): 'q1_0',
+            ('q0_1', '0'): 'q1_1',
+            ('q0_1', '1'): 'q0_1',
+            ('q1_0', '0'): 'q0_0',  
+            ('q1_1', '1'): 'q0_1',  
+            ('q1_0', '1'): 'q1_0',  
+            ('q1_1', '0'): 'q1_1',  
+        }
+        self.start_state = 'q0'
+        self.accept_states = {'q0_0', 'q0_1'}
+
+    def process_string(self, string):
+        current_state = self.start_state
+        for char in string:
+            current_state = self.transitions.get((current_state, char), None)
+            if current_state is None:
+                return False
+        return current_state in self.accept_states
+
+
+afd_inicio_fim = AFDInicioFimMesmo()
+
+
+print(afd_inicio_fim.process_string("1001"))  # True
+print(afd_inicio_fim.process_string("1010"))  # False
+
+6. AFN que aceita strings que contenham pelo menos um '0' sobre o alfabeto {0, 1}
+class AFNPeloMenosUmZero:
+    def __init__(self):
+        self.transitions = {
+            ('q0', '0'): {'q1'},
+            ('q0', '1'): {'q0'},
+            ('q1', '0'): {'q1'},
+            ('q1', '1'): {'q1'},
+        }
+        self.start_state = 'q0'
+        self.accept_states = {'q1'}
+
+    def process_string(self, string):
+        current_states = {self.start_state}
+        for char in string:
+            next_states = set()
+            for state in current_states:
+                next_states.update(self.transitions.get((state, char), set()))
+            current_states = next_states
+        return bool(current_states & self.accept_states)
+
+
+afn_um_zero = AFNPeloMenosUmZero()
+
+
+print(afn_um_zero.process_string("111"))  # False
+print(afn_um_zero.process_string("100"))  # True
+
+7. AFN que reconhece strings que comecem com '01' e terminem com '10'
+class AFNInicia01Termina10:
+    def __init__(self):
+        self.transitions = {
+            ('q0', '0'): {'q1'},
+            ('q1', '1'): {'q2'},
+            ('q2', '0'): {'q2'},
+            ('q2', '1'): {'q3'},
+            ('q3', '0'): {'q4'},
+        }
+        self.start_state = 'q0'
+        self.accept_states = {'q4'}
+
+    def process_string(self, string):
+        current_states = {self.start_state}
+        for char in string:
+            next_states = set()
+            for state in current_states:
+                next_states.update(self.transitions.get((state, char), set()))
+            current_states = next_states
+        return bool(current_states & self.accept_states)
+
+
+afn_01_10 = AFNInicia01Termina10()
+
+
+print(afn_01_10.process_string("0110"))  # True
+print(afn_01_10.process_string("010"))   # False
+
+8. AFN que aceita strings onde o número de '0's é divisível por 3
+
+class AFNZeroDivisivel3:
+    def __init__(self):
+        self.transitions = {
+            ('q0', '0'): {'q1'},
+            ('q0', '1'): {'q0'},
+            ('q1', '0'): {'q2'},
+            ('q1', '1'): {'q1'},
+            ('q2', '0'): {'q0'},
+            ('q2', '1'): {'q2'},
+        }
+        self.start_state = 'q0'
+        self.accept_states = {'q0'}  # Aceita se número de '0's for divisível por 3
+
+    def process_string(self, string):
+        current_states = {self.start_state}
+        for char in string:
+            next_states = set()
+            for state in current_states:
+                next_states.update(self.transitions.get((state, char), set()))
+            current_states = next_states
+        return bool(current_states & self.accept_states)
+
+
+afn_zero_div3 = AFNZeroDivisivel3()
+
+
+print(afn_zero_div3.process_string("00100"))  # True
+print(afn_zero_div3.process_string("0101"))   # False
+
+9. AFD que reconhece strings contendo a sequência "101"
+
+class AFDContem101:
+    def __init__(self):
+        self.transitions = {
+            ('q0', '0'): 'q0',
+            ('q0', '1'): 'q1',
+            ('q1', '0'): 'q2',
+            ('q2', '1'): 'q3',
+            ('q3', '0'): 'q3',
+            ('q3', '1'): 'q3',
+        }
+        self.start_state = 'q0'
+        self.accept_states = {'q3'}
+
+    def process_string(self, string):
+        current_state = self.start_state
+        for char in string:
+            current_state = self.transitions.get((current_state, char), None)
+            if current_state is None:
+                return False
+        return current_state in self.accept_states
+
+
+afd_101 = AFDContem101()
+
+
+print(afd_101.process_string("1101010"))  # True
+print(afd_101.process_string("110011"))   # False
+
+10. AFN que aceita strings com pelo menos um '0' seguido de pelo menos um '1'
+
+class AFNZeroUm:
+    def __init__(self):
+        self.transitions = {
+            ('q0', '0'): {'q1'},
+            ('q1', '0'): {'q1'},
+            ('q1', '1'): {'q2'},
+            ('q2', '0'): {'q2'},
+            ('q2', '1'): {'q2'},
+        }
+        self.start_state = 'q0'
+        self.accept_states = {'q2'}  # Aceita se tiver pelo menos um '0' seguido de '1'
+
+    def process_string(self, string):
+        current_states = {self.start_state}
+        for char in string:
+            next_states = set()
+            for state in current_states:
+                next_states.update(self.transitions.get((state, char), set()))
+            current_states = next_states
+        return bool(current_states & self.accept_states)
+
+
+afn_zero_um = AFNZeroUm()
+
+
+print(afn_zero_um.process_string("0101"))  # True
+print(afn_zero_um.process_string("111"))   # False
+
+
+11. AFD para uma linguagem sobre o alfabeto {a, b} que reconhece strings com um número ímpar de 'a's
+
+class AFDImparAs:
+    def __init__(self):
+        self.transitions = {
+            ('q0', 'a'): 'q1',
+            ('q0', 'b'): 'q0',
+            ('q1', 'a'): 'q0',
+            ('q1', 'b'): 'q1',
+        }
+        self.start_state = 'q0'
+        self.accept_states = {'q1'}  # Aceita se o número de 'a's for ímpar
+
+    def process_string(self, string):
+        current_state = self.start_state
+        for char in string:
+            current_state = self.transitions.get((current_state, char), None)
+            if current_state is None:
+                return False
+        return current_state in self.accept_states
+
+
+afd_impar_as = AFDImparAs()
+
+
+print(afd_impar_as.process_string("aba"))  # True
+print(afd_impar_as.process_string("aabb")) # False
+
+12. AFN que reconhece strings binárias contendo a substring '110'
+
+class AFNContem110:
+    def __init__(self):
+        self.transitions = {
+            ('q0', '1'): {'q1'},
+            ('q1', '1'): {'q2'},
+            ('q2', '0'): {'q3'},
+        }
+        self.start_state = 'q0'
+        self.accept_states = {'q3'}  # Aceita se contém '110'
+
+    def process_string(self, string):
+        current_states = {self.start_state}
+        for char in string:
+            next_states = set()
+            for state in current_states:
+                next_states.update(self.transitions.get((state, char), set()))
+            current_states = next_states
+        return bool(current_states & self.accept_states)
+
+
+afn_110 = AFNContem110()
+
+
+print(afn_110.process_string("1110"))  # True
+print(afn_110.process_string("1010"))  # False
+
+13. AFD que reconhece strings binárias onde o número de '1's é maior que o número de '0's
+
+class AFDMaisUns:
+    def __init__(self):
+        self.start_state = 0  # Representa o estado com a diferença inicial entre '1's e '0's.
+        self.accept_states = {1}  # Aceita se a diferença final for maior que zero.
+        self.current_state = self.start_state
+
+    def process_string(self, string):
+        count = 0  # Representa a diferença entre o número de '1's e '0's.
+        for char in string:
+            if char == '1':
+                count += 1
+            elif char == '0':
+                count -= 1
+            if count <= 0:  # Número de '0's é maior ou igual aos '1's.
+                self.current_state = 0
+            else:
+                self.current_state = 1
+        return self.current_state in self.accept_states
+
+
+afd_mais_uns = AFDMaisUns()
+
+
+print(afd_mais_uns.process_string("11001"))  # True (3 '1's, 2 '0's)
+print(afd_mais_uns.process_string("100"))    # False (1 '1', 2 '0's)
+
+14. AFN que reconhece strings binárias onde as substrings "11" e "00" não aparecem
+
+class AFNSem00ou11:
+    def __init__(self):
+        self.transitions = {
+            ('q0', '0'): {'q1'},
+            ('q0', '1'): {'q2'},
+            ('q1', '1'): {'q2'},
+            ('q2', '0'): {'q1'},
+        }
+        self.start_state = 'q0'
+        self.accept_states = {'q1', 'q2'}
+
+    def process_string(self, string):
+        current_states = {self.start_state}
+        for char in string:
+            next_states = set()
+            for state in current_states:
+                next_states.update(self.transitions.get((state, char), set()))
+            if not next_states:
+                return False  # Rejeita se a string contiver "00" ou "11"
+            current_states = next_states
+        return bool(current_states & self.accept_states)
+
+
+afn_sem_00_11 = AFNSem00ou11()
+
+
+print(afn_sem_00_11.process_string("0101"))  # True 
+print(afn_sem_00_11.process_string("1100"))  # False 
+
+15. AFN que reconhece todas as strings sobre {a, b} com comprimento par
+
+class AFNComprimentoPar:
+    def __init__(self):
+        self.transitions = {
+            ('q0', 'a'): {'q1'},
+            ('q0', 'b'): {'q1'},
+            ('q1', 'a'): {'q0'},
+            ('q1', 'b'): {'q0'},
+        }
+        self.start_state = 'q0'
+        self.accept_states = {'q0'}  # Aceita se o comprimento for par
+
+    def process_string(self, string):
+        current_states = {self.start_state}
+        for char in string:
+            next_states = set()
+            for state in current_states:
+                next_states.update(self.transitions.get((state, char), set()))
+            current_states = next_states
+        return bool(current_states & self.accept_states)
+
+
+afn_par = AFNComprimentoPar()
+
+# Testes
+print(afn_par.process_string("ab")) 
+print(afn_par.process_string("aab")) 
+
+
+16. AFD para reconhecer strings sobre {0, 1} onde os '0's aparecem em blocos consecutivos
+
+class AFDZeroBloco:
+    def __init__(self):
+        self.transitions = {
+            ('q0', '0'): 'q1',
+            ('q0', '1'): 'q2',
+            ('q1', '0'): 'q1',
+            ('q1', '1'): 'q2',
+            ('q2', '0'): 'trap',  # Trap state, pois um '0' aparece depois de '1'
+            ('q2', '1'): 'q2',
+            ('trap', '0'): 'trap',
+            ('trap', '1'): 'trap',
+        }
+        self.start_state = 'q0'
+        self.accept_states = {'q0', 'q1', 'q2'}
+
+    def process_string(self, string):
+        current_state = self.start_state
+        for char in string:
+            current_state = self.transitions.get((current_state, char), 'trap')
+        return current_state in self.accept_states
+
+
+afd_zero_bloco = AFDZeroBloco()
+
+
+print(afd_zero_bloco.process_string("000111"))  
+print(afd_zero_bloco.process_string("0101"))  
+
+17. Conversão de um AFN para um AFD para um autômato que reconhece strings terminadas em '01'
+
+class AFNTermina01:
+    def __init__(self):
+        self.transitions = {
+            ('q0', '0'): {'q0', 'q1'},
+            ('q0', '1'): {'q0'},
+            ('q1', '1'): {'q2'},
+        }
+        self.start_state = 'q0'
+        self.accept_states = {'q2'}
+
+    def process_string(self, string):
+        current_states = {self.start_state}
+        for char in string:
+            next_states = set()
+            for state in current_states:
+                next_states.update(self.transitions.get((state, char), set()))
+            current_states = next_states
+        return bool(current_states & self.accept_states)
+class AFDTermina01:
+    def __init__(self):
+        self.transitions = {
+            frozenset({'q0'}): {'0': frozenset({'q0', 'q1'}), '1': frozenset({'q0'})},
+            frozenset({'q0', 'q1'}): {'0': frozenset({'q0', 'q1'}), '1': frozenset({'q0', 'q2'})},
+            frozenset({'q0', 'q2'}): {'0': frozenset({'q0', 'q1'}), '1': frozenset({'q0'})},
+        }
+        self.start_state = frozenset({'q0'})
+        self.accept_states = {frozenset({'q2'})}
+
+    def process_string(self, string):
+        current_state = self.start_state
+        for char in string:
+            current_state = self.transitions.get(current_state, {}).get(char, frozenset())
+        return current_state in self.accept_states
+
+
+afd_termina_01 = AFDTermina01()
+
+
+print(afd_termina_01.process_string("101"))   # True
+print(afd_termina_01.process_string("1100"))  # False
+
+18. AFD que reconhece strings sobre {0, 1} com número ímpar de '0's e '1's
+
+class AFDIrregulares:
+    def __init__(self):
+        self.transitions = {
+            ('q0', '0'): 'q1',  
+            ('q0', '1'): 'q2',  
+            ('q1', '0'): 'q0',  
+            ('q1', '1'): 'q3',  
+            ('q2', '0'): 'q3',  
+            ('q2', '1'): 'q0',  
+            ('q3', '0'): 'q2',  
+            ('q3', '1'): 'q1',  
+        }
+        self.start_state = 'q0'
+        self.accept_states = {'q3'}  # Estado com números ímpares de '0's e '1's
+
+    def process_string(self, string):
+        current_state = self.start_state
+        for char in string:
+            current_state = self.transitions.get((current_state, char), 'trap')
+        return current_state in self.accept_states
+
+
+afd_irregulares = AFDIrregulares()
+
+
+print(afd_irregulares.process_string("1010"))  # True
+print(afd_irregulares.process_string("1100"))  # False
+
+
+19. AFN que reconhece a linguagem de todas as strings binárias que contenham a substring '010'
+
+class AFNContem010:
+    def __init__(self):
+        self.transitions = {
+            ('q0', '0'): {'q1'},
+            ('q1', '1'): {'q2'},
+            ('q2', '0'): {'q3'},  
+        }
+        self.start_state = 'q0'
+        self.accept_states = {'q3'}
+
+    def process_string(self, string):
+        current_states = {self.start_state}
+        for char in string:
+            next_states = set()
+            for state in current_states:
+                next_states.update(self.transitions.get((state, char), set()))
+            current_states = next_states
+        return bool(current_states & self.accept_states)
+
+
+afn_010 = AFNContem010()
+
+# Testes
+print(afn_010.process_string("1010"))  
+print(afn_010.process_string("1100"))  
+
+20. AFD para strings sobre {a, b} onde a sequência 'ab' aparece exatamente uma vez
+
+class AFDApareceAbUmaVez:
+    def __init__(self):
+        self.transitions = {
+            ('q0', 'a'): 'q1',
+            ('q0', 'b'): 'q0',
+            ('q1', 'a'): 'q1',
+            ('q1', 'b'): 'q2',  
+            ('q2', 'a'): 'q3',  
+            ('q2', 'b'): 'q2',
+            ('q3', 'a'): 'q3', 
+            ('q3', 'b'): 'q3',
+        }
+        self.start_state = 'q0'
+        self.accept_states = {'q2'}
+
+    def process_string(self, string):
+        current_state = self.start_state
+        for char in string:
+            current_state = self.transitions.get((current_state, char), 'q3')
+        return current_state in self.accept_states
+
+
+afd_uma_ab = AFDApareceAbUmaVez()
+
+# Testes
+print(afd_uma_ab.process_string("aababb"))  
+print(afd_uma_ab.process_string("abab"))   
+
+21. AFN que aceita todas as strings sobre {a, b} que tenham um 'a' após cada 'b'
+
+class AFNAposCadaBA:
+    def __init__(self):
+        self.transitions = {
+            ('q0', 'a'): {'q0'},
+            ('q0', 'b'): {'q1'},  
+            ('q1', 'a'): {'q0'},  
+        }
+        self.start_state = 'q0'
+        self.accept_states = {'q0'}
+
+    def process_string(self, string):
+        current_states = {self.start_state}
+        for char in string:
+            next_states = set()
+            for state in current_states:
+                next_states.update(self.transitions.get((state, char), set()))
+            current_states = next_states
+        return bool(current_states & self.accept_states)
+
+
+afn_b_seguido_a = AFNAposCadaBA()
+
+# Testes
+print(afn_b_seguido_a.process_string("abbab")) 
+print(afn_b_seguido_a.process_string("ababa"))  
+
+22. AFD que reconhece uma linguagem onde a diferença entre o número de 'a's e 'b's seja múltipla de 3
+
+
+class AFDMaisTres:
+    def __init__(self):
+        self.transitions = {
+            ('q0', 'a'): 'q1', 
+            ('q0', 'b'): 'q2',  
+            ('q1', 'a'): 'q2',
+            ('q1', 'b'): 'q0',
+            ('q2', 'a'): 'q0',
+            ('q2', 'b'): 'q1',
+        }
+        self.start_state = 'q0'
+        self.accept_states = {'q0'}  # Aceita se a diferença final for 0 mod 3
+
+    def process_string(self, string):
+        current_state = self.start_state
+        for char in string:
+            current_state = self.transitions.get((current_state, char), 'trap')
+        return current_state in self.accept_states
+
+
+afd_mais_tres = AFDMaisTres()
+
+# Testes
+print(afd_mais_tres.process_string("aabb")) 
+print(afd_mais_tres.process_string("aaab"))  
+
+23. AFN que aceite qualquer string que contenha a sequência "101" ou "110" sobre {0, 1}
+
+class AFNContem101Ou110:
+    def __init__(self):
+        self.transitions = {
+            ('q0', '1'): {'q1'},
+            ('q1', '0'): {'q2', 'q4'},  
+            ('q2', '1'): {'q3'},  
+            ('q4', '1'): {'q5'},  
+        }
+        self.start_state = 'q0'
+        self.accept_states = {'q3', 'q5'}
+
+    def process_string(self, string):
+        current_states = {self.start_state}
+        for char in string:
+            next_states = set()
+            for state in current_states:
+                next_states.update(self.transitions.get((state, char), set()))
+            current_states = next_states
+        return bool(current_states & self.accept_states)
+
+
+afn_101_110 = AFNContem101Ou110()
+
+
+print(afn_101_110.process_string("110"))   
+print(afn_101_110.process_string("1010"))  
+print(afn_101_110.process_string("1001")) 
+
+24. AFD que aceite strings sobre {0, 1} onde a sequência "010" aparece pelo menos duas vezes
+
+class AFDApareceDuasVezes010:
+    def __init__(self):
+        self.transitions = {
+            ('q0', '0'): 'q1',
+            ('q1', '1'): 'q2',
+            ('q2', '0'): 'q3', 
+            ('q3', '0'): 'q4',
+            ('q4', '1'): 'q5',
+            ('q5', '0'): 'q6',  
+        }
+        self.start_state = 'q0'
+        self.accept_states = {'q6'}
+
+    def process_string(self, string):
+        current_state = self.start_state
+        for char in string:
+            current_state = self.transitions.get((current_state, char), 'trap')
+        return current_state in self.accept_states
+
+
+afd_duas_010 = AFDApareceDuasVezes010()
+
+
+print(afd_duas_010.process_string("010010"))  
+print(afd_duas_010.process_string("010"))     
+
+25. AFD que aceita strings que têm exatamente três 0s
+
+
+
+class AFDExatamenteTresZeros:
+    def __init__(self):
+        self.transitions = {
+            ('q0', '0'): 'q1',
+            ('q0', '1'): 'q0',
+            ('q1', '0'): 'q2',
+            ('q1', '1'): 'q1',
+            ('q2', '0'): 'q3',
+            ('q2', '1'): 'q2',
+            ('q3', '0'): 'trap',
+            ('q3', '1'): 'q3',
+        }
+        self.start_state = 'q0'
+        self.accept_states = {'q3'}  # Aceita se atingir q3 (exatamente 3 zeros)
+
+    def process_string(self, string):
+        current_state = self.start_state
+        for char in string:
+            current_state = self.transitions.get((current_state, char), 'trap')
+        return current_state in self.accept_states
+
+
+afd_exatamente_tres_zeros = AFDExatamenteTresZeros()
+
+
+print(afd_exatamente_tres_zeros.process_string("000"))  
+print(afd_exatamente_tres_zeros.process_string("0000")) 
+print(afd_exatamente_tres_zeros.process_string("101010"))  
+
+
+import re
+
+class AutomatoCPF:
+    def __init__(self):
+        self.cpf_pattern = re.compile(r'^\d{11}$')  # CPF deve ter 11 dígitos
+
+    def is_valid(self, cpf):
+        # Verifica se o CPF é válido
+        if not self.cpf_pattern.match(cpf):
+            return False
+        # Implementação simplificada da validação do CPF (sem cálculos)
+        return True
+
+    def mask_cpf(self, cpf):
+        if self.is_valid(cpf):
+            return f"{cpf[:3]}.{cpf[3:6]}.{cpf[6:9]}-{cpf[9:]}"
+        return "CPF inválido"
+
+class AutomatoPlacaAntiga:
+    def __init__(self):
+        self.placa_pattern = re.compile(r'^[A-Z]{3}-\d{4}$')  # Placa antiga no formato ABC-1234
+
+    def is_valid(self, placa):
+        return bool(self.placa_pattern.match(placa))
+
+    def mask_placa(self, placa):
+        if self.is_valid(placa):
+            return placa  # A placa antiga não necessita de mascaramento
+        return "Placa inválida"
+
+class AutomatoPlacaMercosul:
+    def __init__(self):
+        self.placa_pattern = re.compile(r'^[A-Z]{3}\d{1}[A-Z]{1}\d{2}$')  # Placa Mercosul no formato ABC1D23
+
+    def is_valid(self, placa):
+        return bool(self.placa_pattern.match(placa))
+
+    def mask_placa(self, placa):
+        if self.is_valid(placa):
+            return placa  # A placa Mercosul não necessita de mascaramento
+        return "Placa inválida"
+
+
+automato_cpf = AutomatoCPF()
+automato_placa_antiga = AutomatoPlacaAntiga()
+automato_placa_mercosul = AutomatoPlacaMercosul()
+
+
+cpf_teste = "12345678909"  # Exemplo de CPF (não válido, apenas ilustrativo)
+print("CPF:", automato_cpf.mask_cpf(cpf_teste))  # Deve retornar a máscara ou CPF inválido
+
+
+placa_antiga_teste = "ABC-1234"
+print("Placa Antiga:", automato_placa_antiga.mask_placa(placa_antiga_teste))  # Deve retornar a placa
+
+
+placa_mercosul_teste = "ABC1D23"
+print("Placa Mercosul:", automato_placa_mercosul.mask_placa(placa_mercosul_teste))  # Deve retornar a placa
